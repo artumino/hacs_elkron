@@ -1,0 +1,10 @@
+{
+    "domain": "elkron",
+    "name": "Elkron",
+    "documentation": "https://git.jartum.org/artum/hacs_elkron",
+    "issue_tracker": "https://git.jartum.org/artum/hacs_elkron/-/issues",
+    "requirements": [],
+    "dependencies": [],
+    "codeowners": ["@artum"],
+    "version": "0.0.1"
+  }
