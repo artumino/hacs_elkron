@@ -42,11 +42,11 @@ async def async_setup_entry(
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    away_zones = [int(x) for x in cv.ensure_list_csv(config.get(CONF_AWAY_ZONES, ""))]
-    home_zones = [int(x) for x in cv.ensure_list_csv(config.get(CONF_HOME_ZONES, ""))]
+    away_zones = [int(x) for x in cv.ensure_list_csv(config.get(AlarmControlPanelState.ARMED_AWAY, ""))]
+    home_zones = [int(x) for x in cv.ensure_list_csv(config.get(AlarmControlPanelState.ARMED_HOME, ""))]
     states = [
-        {"name": CONF_AWAY_ZONES, "zones": away_zones},
-        {"name": CONF_HOME_ZONES, "zones": home_zones},
+        {"name": AlarmControlPanelState.ARMED_AWAY, "zones": away_zones},
+        {"name": AlarmControlPanelState.ARMED_HOME, "zones": home_zones},
     ]
 
     elkronalarm = ElkronAlarm(hass, name, username, password, host, states)
@@ -54,13 +54,13 @@ async def async_setup_entry(
 
 
 class ElkronState:
-    def __init__(self, name, zones):
-        self._name = name
+    def __init__(self, name: AlarmControlPanelState, zones):
+        self._name: AlarmControlPanelState = name
         self._zones = zones
         self._zones.sort()
 
     @property
-    def name(self):
+    def name(self) -> AlarmControlPanelState:
         return self._name
 
     @property
@@ -84,17 +84,24 @@ class ElkronAlarm(AlarmControlPanelEntity):
         # Setup States
         self._states = []
         for custom_state in states:
-            if custom_state[CONF_NAME] != None and custom_state[CONF_ZONES] != None:
-                new_state = ElkronState(
-                    custom_state[CONF_NAME], custom_state[CONF_ZONES]
+            name = custom_state.get(CONF_NAME)
+            zones = custom_state.get(CONF_ZONES)
+            if name is None or zones is None:
+                _LOGGER.warning(
+                    "Invalid state configuration, missing name or zones: "
+                    + str(custom_state)
                 )
-                self._states.append(new_state)
+                continue
+            new_state = ElkronState(
+                name, zones
+            )
+            self._states.append(new_state)
 
-                if custom_state[CONF_NAME] == AlarmControlPanelState.ARMED_HOME:
-                    self._armed_home_state = new_state
+            if name == AlarmControlPanelState.ARMED_HOME:
+                self._armed_home_state = new_state
 
-                if custom_state[CONF_NAME] == AlarmControlPanelState.ARMED_AWAY:
-                    self._armed_away_state = new_state
+            if name == AlarmControlPanelState.ARMED_AWAY:
+                self._armed_away_state = new_state
 
         self._alarm: ElkronClient = ElkronClient(username, password, host)
 
@@ -146,12 +153,9 @@ class ElkronAlarm(AlarmControlPanelEntity):
         active_zones = remote_state["state"]["activezone"]
         active_zones.sort()
 
-        for custom_state in remote_state:
-            if custom_state.zones == active_zones:
-                if custom_state.name == CONF_AWAY_ZONES:
-                    return AlarmControlPanelState.ARMED_AWAY
-                if custom_state.name == CONF_HOME_ZONES:
-                    return AlarmControlPanelState.ARMED_HOME
+        for state in self._states:
+            if state.zones == active_zones:
+                return state.name
 
         if active_zones.__len__() == 0:
             return AlarmControlPanelState.DISARMED

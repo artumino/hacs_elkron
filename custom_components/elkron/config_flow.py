@@ -8,7 +8,8 @@ import voluptuous as vol
 from homeassistant.data_entry_flow import section
 
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME, CONF_HOST
-from .const import DOMAIN, CONF_AWAY_ZONES, CONF_HOME_ZONES, DEFAULT_NAME
+from .const import DOMAIN, DEFAULT_NAME
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,8 +32,8 @@ class ElkronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
             vol.Required(CONF_HOST): str,
-            vol.Required(CONF_AWAY_ZONES, default="1,2,3,4,5"): str,
-            vol.Required(CONF_HOME_ZONES, default="1"): str,
+            vol.Required(AlarmControlPanelState.ARMED_AWAY, default="1,2,3,4,5"): str,
+            vol.Required(AlarmControlPanelState.ARMED_HOME, default="1"): str,
         }
 
         if user_input is None:
