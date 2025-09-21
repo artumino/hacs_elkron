@@ -122,7 +122,7 @@ class ElkronAlarm(AlarmControlPanelEntity):
         self._state = {"state": sysState, "info": sysInfo, "structure": structure}
         _LOGGER.debug("Updated alarm state: " + str(self._state))
         _LOGGER.debug("Elkron alarm state update complete")
-        return self._state
+        self._attr_alarm_state = self._calculate_alarm_state(self._state)
 
     @property
     def name(self):
@@ -134,17 +134,24 @@ class ElkronAlarm(AlarmControlPanelEntity):
         """Return one or more digits/characters."""
         return CodeFormat.NUMBER
 
-    def _calculate_alarm_state(self) -> AlarmControlPanelState | None:
+    def _calculate_alarm_state(self, remote_state) -> AlarmControlPanelState | None:
         """Calculate the alarm state."""
         if (
-            self._state == None
-            or "state" not in self._state
-            or self._state["state"] == None
-            or "activezone" not in self._state["state"]
+            remote_state is None
+            or "state" not in remote_state
+            or remote_state["state"] is None
+            or "activezone" not in remote_state["state"]
         ):
             return None
-        active_zones = self._state["state"]["activezone"]
+        active_zones = remote_state["state"]["activezone"]
         active_zones.sort()
+
+        for custom_state in remote_state:
+            if custom_state.zones == active_zones:
+                if custom_state.name == CONF_AWAY_ZONES:
+                    return AlarmControlPanelState.ARMED_AWAY
+                if custom_state.name == CONF_HOME_ZONES:
+                    return AlarmControlPanelState.ARMED_HOME
 
         if active_zones.__len__() == 0:
             return AlarmControlPanelState.DISARMED
@@ -153,18 +160,6 @@ class ElkronAlarm(AlarmControlPanelEntity):
             return AlarmControlPanelState.ARMED_CUSTOM_BYPASS
 
         return None
-
-    @cached_property
-    def alarm_state(self) -> AlarmControlPanelState | None:
-        calculated_state = self._calculate_alarm_state()
-        if calculated_state is None:
-            return None
-
-        for custom_state in self._states:
-            if custom_state.zones == active_zones:
-                return custom_state.name
-
-        return calculated_state
 
     @cached_property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
