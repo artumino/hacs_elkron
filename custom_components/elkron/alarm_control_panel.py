@@ -25,6 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from typing import Any, Mapping
 from propcache.api import cached_property
 import homeassistant.helpers.config_validation as cv
 
@@ -158,8 +159,8 @@ class ElkronAlarm(AlarmControlPanelEntity):
 
         return calculated_state
 
-    @property
-    def device_state_attributes(self):
+    @cached_property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return self._state
 
