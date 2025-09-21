@@ -7,14 +7,12 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME, CONF_HO
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelState,
+    AlarmControlPanelEntityFeature,
     CodeFormat,
 )
 from pylkron.elkron_client import ElkronClient
 from .const import (
     DOMAIN,
-    CONF_AWAY_ZONES,
-    CONF_HOME_ZONES,
-    CONF_STATES,
     DEFAULT_NAME,
     CONF_ZONES,
 )
@@ -42,8 +40,14 @@ async def async_setup_entry(
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    away_zones = [int(x) for x in cv.ensure_list_csv(config.get(AlarmControlPanelState.ARMED_AWAY, ""))]
-    home_zones = [int(x) for x in cv.ensure_list_csv(config.get(AlarmControlPanelState.ARMED_HOME, ""))]
+    away_zones = [
+        int(x)
+        for x in cv.ensure_list_csv(config.get(AlarmControlPanelState.ARMED_AWAY, ""))
+    ]
+    home_zones = [
+        int(x)
+        for x in cv.ensure_list_csv(config.get(AlarmControlPanelState.ARMED_HOME, ""))
+    ]
     states = [
         {"name": AlarmControlPanelState.ARMED_AWAY, "zones": away_zones},
         {"name": AlarmControlPanelState.ARMED_HOME, "zones": home_zones},
@@ -92,9 +96,7 @@ class ElkronAlarm(AlarmControlPanelEntity):
                     + str(custom_state)
                 )
                 continue
-            new_state = ElkronState(
-                name, zones
-            )
+            new_state = ElkronState(name, zones)
             self._states.append(new_state)
 
             if name == AlarmControlPanelState.ARMED_HOME:
@@ -244,14 +246,7 @@ class ElkronAlarm(AlarmControlPanelEntity):
 
         self.schedule_update_ha_state()
 
-    @property
-    def supported_features(self) -> int:
+    @cached_property
+    def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
-        try:
-            from homeassistant.components.alarm_control_panel import (
-                SUPPORT_ALARM_ARM_AWAY,
-                SUPPORT_ALARM_ARM_HOME,
-            )
-        except ImportError:
-            return 0
-        return SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME
+        return AlarmControlPanelEntityFeature.ARM_HOME | AlarmControlPanelEntityFeature.ARM_AWAY
