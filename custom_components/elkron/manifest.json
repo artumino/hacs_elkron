@@ -4,7 +4,8 @@
     "documentation": "https://git.jartum.org/artum/hacs_elkron",
     "issue_tracker": "https://git.jartum.org/artum/hacs_elkron/-/issues",
     "requirements": [],
-    "dependencies": [],
+    "dependencies": ["pylkron"],
     "codeowners": ["@artum"],
+    "config_flow": true,
     "version": "0.0.1"
   }

@@ -2,14 +2,12 @@
 import logging
 import re
 
-import voluptuous as vol
-
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY, CONF_HOST, 
     STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_CUSTOM_BYPASS)
-import homeassistant.helpers.config_validation as cv
+from pylkron.elkron_client import ElkronClient
+from .const import DOMAIN, CONF_STATES, CONF_ZONES, DEFAULT_NAME
 
 try:
     from homeassistant.components.alarm_control_panel import (
@@ -19,25 +17,6 @@ except ImportError:
     from homeassistant.components.alarm_control_panel import AlarmControlPanel
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = 'Elkron'
-CONF_STATES = 'states'
-CONF_ZONES = 'zones'
-
-STATE_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_ZONES, default=[]):
-        vol.All(cv.ensure_list_csv, [cv.positive_int]),
-})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_STATES): vol.All(
-            cv.ensure_list, [STATE_SCHEMA]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
@@ -66,11 +45,10 @@ class ElkronState:
     def zones(self):
         return self._zones
 
-class ElkronAlarm(AlarmControlPanel):
+class ElkronAlarm(AlarmControlPanel, domain=DOMAIN):
     """Representation of an Elkron status."""
     def __init__(self, hass, name, username, password, host, states):
         """Initialize the Elkron status."""
-        from pylkron.elkron_client import ElkronClient
         _LOGGER.debug('Setting up ElkronClient...')
         self._hass = hass
         self._name = name
