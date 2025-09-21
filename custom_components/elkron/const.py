@@ -1,4 +1,6 @@
-DOMAIN = 'elkron'
-CONF_STATES = 'states'
-CONF_ZONES = 'zones'
-DEFAULT_NAME = 'Elkron'
+DOMAIN = "elkron"
+CONF_STATES = "states"
+CONF_ZONES = "zones"
+CONF_AWAY_ZONES = "armed_away"
+CONF_HOME_ZONES = "armed_home"
+DEFAULT_NAME = "Elkron"
