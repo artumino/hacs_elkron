@@ -3,9 +3,10 @@
     "name": "Elkron",
     "documentation": "https://git.jartum.org/artum/hacs_elkron",
     "issue_tracker": "https://git.jartum.org/artum/hacs_elkron/-/issues",
-    "requirements": [],
-    "dependencies": ["pylkron"],
+    "requirements": ["pylkron"],
+    "dependencies": [],
     "codeowners": ["@artum"],
     "config_flow": true,
+    "single_config_entry": true,
     "version": "0.0.1"
   }
