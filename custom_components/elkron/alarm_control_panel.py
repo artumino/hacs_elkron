@@ -100,21 +100,28 @@ class ElkronAlarm(AlarmControlPanelEntity):
 
     async def async_update(self):
         """Fetch the latest state."""
+        _LOGGER.debug("Updating Elkron alarm state...")
         await self._hass.async_add_executor_job(self._alarm.doLogin)
+        _LOGGER.debug("Logged in to Elkron alarm")
         sysState = await self._hass.async_add_executor_job(
             self._alarm.getDetailedStates
         )
+        _LOGGER.debug("Fetched alarm state: " + str(sysState))
         sysInfo = await self._hass.async_add_executor_job(self._alarm.getSysInfo)
+        _LOGGER.debug("Fetched alarm info: " + str(sysInfo))
 
         plantStructure = await self._hass.async_add_executor_job(
             self._alarm.getPlantStructure
         )
+        _LOGGER.debug("Fetched alarm structure: " + str(plantStructure))
         zones = plantStructure["cfgzone"]
         structure = []
         for zone in zones:
             structure.append({"name": zone["NAME"], "zoneId": zone["NID"]})
 
         self._state = {"state": sysState, "info": sysInfo, "structure": structure}
+        _LOGGER.debug("Updated alarm state: " + str(self._state))
+        _LOGGER.debug("Elkron alarm state update complete")
         return self._state
 
     @property
